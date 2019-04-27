@@ -13,15 +13,10 @@ import (
 	"strings"
 )
 
-var plugin *glightning.Plugin
-
-
-func GetGlobalPlugin() *glightning.Plugin {
-	return plugin
-}
 
 
 func Init(lightningDir string) {
+	plugin := lightning.GetGlobalPlugin()
 	plugin = glightning.NewPlugin(InitFunc)
 	plugin.RegisterOption(glightning.NewOption("factory-port", "port api is available on. default: 9741", "9741"))
 	plugin.RegisterOption(glightning.NewOption("factory-page", "page api is available on. default: factory", "factory"))
@@ -51,16 +46,6 @@ type trustKey struct {
 	Priviledges string
 }
 
-type KeysToPriviledges struct {
-        //defining the json encoding 
-	KsToPs []KeyToPriviledges
-}
-
-type KeyToPriviledges struct {
-	PubKey string
-	Priviledges []string
-}
-
 func (t *trustKey) New() interface{} {
 	return &trustKey{}
 }
@@ -70,17 +55,18 @@ func (t *trustKey) Name() string {
 }
 
 func (t *trustKey) Call() (jrpc2.Result, error) {
+	plugin := lightning.GetGlobalPlugin()
 	var ksToPsFile string = plugin.GetOptionValue("factory-trustedkeyfile")
 	f, err := os.Open(ksToPsFile)
 	//TODO err check
 	var decoder *json.Decoder = json.NewDecoder(f)
 	var encoder *json.Encoder
-	var ksToPs KeysToPriviledges
+	var ksToPs lightning.KeysToPriviledges
 	var pubkey string = t.PubKey
 	var priviledges []string = strings.Split(t.Priviledges, ",")
 	decoder.Decode(&ksToPs)
 	f.Close()
-	ksToPs.KsToPs = append(ksToPs.KsToPs, KeyToPriviledges{pubkey, priviledges})
+	ksToPs.KsToPs = append(ksToPs.KsToPs, lightning.KeyToPriviledges{pubkey, priviledges})
 	f, err = os.Create(ksToPsFile)
 	//TODO err check
         encoder = json.NewEncoder(f)

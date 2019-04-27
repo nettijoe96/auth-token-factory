@@ -3,6 +3,7 @@ package main
 
 import (
 	"flag"
+	"github.com/nettijoe96/auth-token-factory/lightning"
 	"github.com/nettijoe96/auth-token-factory/plugin"
 	"os"
 )
@@ -13,7 +14,7 @@ func main() {
 	//if plugin=false, then we do not create a plugin! (plugin=true by default)
 	if flagMap["plugin"].(bool) {
 	    plugin.Init(LightningDir)
-	    p := plugin.GetGlobalPlugin()
+	    p := lightning.GetGlobalPlugin()
 	    p.Start(os.Stdin, os.Stdout)
 	/*
 	}else{
