@@ -26,4 +26,8 @@ func GetGlobalPlugin() *glightning.Plugin {
 	return plugin
 }
 
+func SetGlobalPlugin(p *glightning.Plugin) {
+	plugin = p
+}
+
 
