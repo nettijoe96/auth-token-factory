@@ -54,7 +54,7 @@ func InitFunc(p *glightning.Plugin, o map[string]string, config *glightning.Conf
 type trustKey struct {
 	//defining the args of the trustKey method`
 	PubKey string
-	Priviledges string
+	Privileges string
 }
 
 func (t *trustKey) New() interface{} {
@@ -70,17 +70,16 @@ func (t *trustKey) Call() (jrpc2.Result, error) {
 	var ksToPsFile string = plugin.GetOptionValue("factory-trustedkeyfile")
 	f, err := os.Open(ksToPsFile)
 	if err != nil {
-		err = errors.Wrap(err, "failed to open ksToPsFile in trustKey.Call()")
-		return nil, err
+		os.Create(ksToPsFile)
 	}
 	var decoder *json.Decoder = json.NewDecoder(f)
 	var encoder *json.Encoder
-	var ksToPs lightning.KeysToPriviledges
+	var ksToPs lightning.KeysToPrivileges
 	var pubkey string = t.PubKey
-	var priviledges []string = strings.Split(t.Priviledges, ",")
+	var privileges []string = strings.Split(t.Privileges, ",")
 	decoder.Decode(&ksToPs)
 	f.Close()
-	ksToPs.KsToPs = append(ksToPs.KsToPs, lightning.KeyToPriviledges{pubkey, priviledges})
+	ksToPs.KsToPs = append(ksToPs.KsToPs, lightning.KeyToPrivileges{pubkey, privileges})
 	f, err = os.Create(ksToPsFile)
 	if err != nil {
 		err = errors.Wrap(err, "failed to create new ksToPsFile file in trustKey.Call()")
@@ -89,5 +88,5 @@ func (t *trustKey) Call() (jrpc2.Result, error) {
         encoder = json.NewEncoder(f)
 	encoder.Encode(ksToPs)
 	f.Close()
-	return fmt.Sprintf("added trust for public key", t.PubKey, "for priviledges", t.Priviledges), err
+	return fmt.Sprintf("added trust for public key", t.PubKey, "for privileges", t.Privileges), err
 }

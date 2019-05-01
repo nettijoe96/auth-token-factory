@@ -13,7 +13,7 @@ import (
 func LoadPrivBytes(keyfile string) ([]byte, error) {
 	bKeyFile, err := ioutil.ReadFile(keyfile)
 	if err != nil {
-		err = errors.Wrap(err, "failed to read keyfile in LoadPrivRSA")
+		err = errors.Wrap(err, "failed to read keyfile in LoadPrivRSA at location" + keyfile)
 		return nil, err
 	}
         block , _ := pem.Decode(bKeyFile)
@@ -25,7 +25,7 @@ func LoadPrivBytes(keyfile string) ([]byte, error) {
 func LoadPrivRSA(keyfile string) (*rsa.PrivateKey, error) {
 	bKeyFile, err := ioutil.ReadFile(keyfile)
 	if err != nil {
-		err = errors.Wrap(err, "failed to read keyfile in LoadPrivRSA")
+		err = errors.Wrap(err, "failed to read keyfile in LoadPrivRSA at location" + keyfile)
 		return nil, err
 	}
 	rsaPriv, err := jwt.ParseRSAPrivateKeyFromPEM(bKeyFile)

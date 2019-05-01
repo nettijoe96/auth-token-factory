@@ -4,14 +4,14 @@ import (
 	"github.com/niftynei/glightning/glightning"
 )
 
-type KeysToPriviledges struct {
+type KeysToPrivileges struct {
         //defining the json encoding 
-	KsToPs []KeyToPriviledges
+	KsToPs []KeyToPrivileges
 }
 
-type KeyToPriviledges struct {
+type KeyToPrivileges struct {
 	PubKey string
-	Priviledges []string
+	Privileges []string
 }
 
 var lightning *glightning.Lightning = glightning.NewLightning()

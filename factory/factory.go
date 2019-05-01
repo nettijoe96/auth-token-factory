@@ -45,16 +45,17 @@ func (h JWTHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(errors.Wrap(err, "failed to open ksToPsFile in ServeHTTP"))
 		}
 	        var decoder *json.Decoder = json.NewDecoder(f)
-	        var ksToPs lightning.KeysToPriviledges
+	        var ksToPs lightning.KeysToPrivileges
 	        decoder.Decode(&ksToPs)
 	        defer f.Close()
-                var priviledges []string = getPriviledges(xClientPubKey, ksToPs)
-	        if priviledges != nil {
-			token, err := createToken(priviledges, priv)
+                var privileges []string = getPrivileges(xClientPubKey, ksToPs)
+	        if privileges != nil {
+			rawToken, err := createToken(privileges, priv)
 			if err != nil {
 			        log.Fatal(errors.Wrap(err, "token failed to sign in createToken"))
 			}
-		        io.WriteString(w, token)
+		        io.WriteString(w, rawToken)
+			log.Print(rawToken)
 	        }else{
 			w.WriteHeader(http.StatusUnauthorized)
 	        }
@@ -64,23 +65,23 @@ func (h JWTHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getPriviledges(pubKey string, ksToPs lightning.KeysToPriviledges) []string {
+func getPrivileges(pubKey string, ksToPs lightning.KeysToPrivileges) []string {
 	for _, kToPs := range ksToPs.KsToPs {
 		if kToPs.PubKey == pubKey {
-			return kToPs.Priviledges
+			return kToPs.Privileges
 		}
 	}
 	return nil
 }
 
-func createToken(priviledges []string, priv *rsa.PrivateKey) (string, error) {
+func createToken(privileges []string, priv *rsa.PrivateKey) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims {
-		"priviledges": priviledges,
+		"privileges": privileges,
 		"timestamp": strconv.FormatInt((time.Now().Unix()), 10),
 	})
 	tokenWithSig, err := token.SignedString(priv)
 	if err != nil {
-		errors.Wrap(err, "error signing token. Probablly due to inputted private key")
+		errors.Wrap(err, "error signing token. Probably due to inputted private key")
 		return "", err
 	}
 	return tokenWithSig, err
