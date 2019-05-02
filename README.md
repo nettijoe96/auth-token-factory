@@ -9,7 +9,7 @@
 1. Build: `go build`
 2. Add plugin to plugin library through symlink: 
 
-    `ln -s <path to auth-token-factory> .`
+    `ln -s <path to jwt-factory> .`
 
     `cd <path to c-lightning source>/plugins`
 

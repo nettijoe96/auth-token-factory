@@ -2,8 +2,8 @@ package main
 
 
 import (
-	"github.com/nettijoe96/auth-token-factory/lightning"
-	"github.com/nettijoe96/auth-token-factory/plugin"
+	"github.com/nettijoe96/jwt-factory/lightning"
+	"github.com/nettijoe96/jwt-factory/plugin"
 	"os"
 )
 
