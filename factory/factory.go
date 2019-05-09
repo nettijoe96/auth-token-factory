@@ -50,9 +50,9 @@ func (h JWTHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	        defer f.Close()
                 var privileges []string = getPrivileges(xClientPubKey, ksToPs)
 	        if privileges != nil {
-			rawToken, err := createToken(privileges, priv)
+			rawToken, err := CreateToken(privileges, priv)
 			if err != nil {
-			        log.Fatal(errors.Wrap(err, "token failed to sign in createToken"))
+			        log.Fatal(errors.Wrap(err, "token failed to sign in factory.CreateToken"))
 			}
 		        io.WriteString(w, rawToken)
 			log.Print(rawToken)
@@ -74,7 +74,7 @@ func getPrivileges(pubKey string, ksToPs lightning.KeysToPrivileges) []string {
 	return nil
 }
 
-func createToken(privileges []string, priv *rsa.PrivateKey) (string, error) {
+func CreateToken(privileges []string, priv *rsa.PrivateKey) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims {
 		"privileges": privileges,
 		"timestamp": strconv.FormatInt((time.Now().Unix()), 10),

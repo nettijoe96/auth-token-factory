@@ -3,8 +3,10 @@ package plugin
 
 import (
 	"fmt"
+	"crypto/rsa"
 	"crypto/tls"
 	"encoding/json"
+	"github.com/nettijoe96/jwt-factory/crypto"
 	"github.com/nettijoe96/jwt-factory/factory"
 	"github.com/nettijoe96/jwt-factory/lightning"
 	"github.com/niftynei/glightning/glightning"
@@ -25,7 +27,7 @@ func Init(lightningDir string) {
 	plugin.RegisterOption(glightning.NewOption("certfile", "server certificate. User must approve this certificate. Default cert locaiton is lightningDir/cert.pem", lightningDir + "cert.pem"))
 	plugin.RegisterOption(glightning.NewOption("keyfile", "private key file of the public key in the server certificate. Default key location is lightningDir/key.pem.", lightningDir + "key.pem"))
 	plugin.RegisterOption(glightning.NewOption("factory-trustedkeyfile", "private key file of the public key in the server certificate. Default location is in lightningDir/trustedkeys.json.", lightningDir + "trustedkeys.json"))
-	trustKeyMethod := glightning.NewRpcMethod(&trustKey{}, "run lightning graphql api")
+	trustKeyMethod := glightning.NewRpcMethod(&trustKey{}, "allow a token with certian priviledges to be sent to owner of public key")
 	trustKeyMethod.LongDesc = "add a trusted pubkey"
 	plugin.RegisterMethod(trustKeyMethod)
 	lightning.SetGlobalPlugin(plugin)
@@ -38,10 +40,8 @@ func InitFunc(p *glightning.Plugin, o map[string]string, config *glightning.Conf
 	var keyfile string = o["keyfile"]
 	l := lightning.GetGlobalLightning()
 	l.StartUp(config.RpcFile, config.LightningDir)
-	//h := http.NewServeMux()
 	var server *http.Server = &http.Server {
 		Addr: ":" + port,
-		//Handler: factory.CreateJWTHandler(h),
 		Handler: factory.JWTHandler{},
 		TLSConfig: &tls.Config {
 			ClientAuth: tls.RequireAnyClientCert,
@@ -88,5 +88,16 @@ func (t *trustKey) Call() (jrpc2.Result, error) {
         encoder = json.NewEncoder(f)
 	encoder.Encode(ksToPs)
 	f.Close()
-	return fmt.Sprintf("added trust for public key", t.PubKey, "for privileges", t.Privileges), err
+	var rawToken string
+	var keyfile string = plugin.GetOptionValue("keyfile")
+	var pkey *rsa.PrivateKey
+	pkey, err = crypto.LoadPrivRSA(keyfile)
+	if err != nil {
+	        return fmt.Sprintf("added trust for public key " + t.PubKey, " for privileges " + t.Privileges), err
+	}
+	rawToken, err = factory.CreateToken(privileges, pkey)
+	if err != nil {
+	        return fmt.Sprintf("added trust for public key " + t.PubKey, " for privileges " + t.Privileges), err
+	}
+	return fmt.Sprintf("added trust for public key " + t.PubKey, " for privileges " + t.Privileges + " example token: " + rawToken), err
 }
