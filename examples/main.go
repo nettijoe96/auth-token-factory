@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"html/template"
-	"fmt"
 	"io/ioutil"
 	"crypto/x509"
 	"encoding/pem"
@@ -37,12 +36,12 @@ func load(title string) (*Page, error) {
 }
 
 func demo(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("in demo func")
 	var certfile string = FlagMap["certfile"].(string)
 	var keyfile string = FlagMap["keyfile"].(string)
+	var name string = "serviceName"
 	var bPub []byte = getPubFromCert(certfile, keyfile)
 	var strPub string = hex.EncodeToString(bPub)
-	var cmd string  = trustkey + " " + strPub + " " + graphqlAdmin
+	var cmd string  = trustkey + " " + name + " " + graphqlAdmin + " " + strPub
 	p := &Page{Title: "demo", Body: []byte(cmd)}
 	p.save()
 	t, _ := template.ParseFiles("demo.html")
@@ -70,7 +69,6 @@ func getPubFromCert(certfile, keyfile string) []byte {
 
 func main() {
 	Flags()
-	fmt.Println("in main func")
 	http.HandleFunc("/demo/", demo)
 	http.HandleFunc("/token/", token)
 	http.ListenAndServe(":9740", nil)

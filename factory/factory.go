@@ -8,7 +8,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"github.com/nettijoe96/jwt-factory/crypto"
-	"github.com/nettijoe96/jwt-factory/lightning"
+	"github.com/nettijoe96/jwt-factory/global"
 	"net/http"
         "io"
 	"os"
@@ -25,7 +25,7 @@ func (h JWTHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var peerCerts []*x509.Certificate = r.TLS.PeerCertificates
 	var bClientPubKey []byte
         var xClientPubKey string
-        p := lightning.GetGlobalPlugin()
+        p := global.GetGlobalPlugin()
 	var ksToPsFile string = p.GetOptionValue("factory-trustedkeyfile")
 	var keyfile string = p.GetOptionValue("keyfile")
 	var err error
@@ -45,7 +45,7 @@ func (h JWTHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(errors.Wrap(err, "failed to open ksToPsFile in ServeHTTP"))
 		}
 	        var decoder *json.Decoder = json.NewDecoder(f)
-	        var ksToPs lightning.KeysToPrivileges
+	        var ksToPs global.KeysToPrivileges
 	        decoder.Decode(&ksToPs)
 	        defer f.Close()
                 var privileges []string = getPrivileges(xClientPubKey, ksToPs)
@@ -65,7 +65,7 @@ func (h JWTHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getPrivileges(pubKey string, ksToPs lightning.KeysToPrivileges) []string {
+func getPrivileges(pubKey string, ksToPs global.KeysToPrivileges) []string {
 	for _, kToPs := range ksToPs.KsToPs {
 		if kToPs.PubKey == pubKey {
 			return kToPs.Privileges

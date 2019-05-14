@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"github.com/nettijoe96/jwt-factory/crypto"
 	"github.com/nettijoe96/jwt-factory/factory"
-	"github.com/nettijoe96/jwt-factory/lightning"
+	"github.com/nettijoe96/jwt-factory/global"
 	"github.com/niftynei/glightning/glightning"
 	"github.com/niftynei/glightning/jrpc2"
 	"github.com/pkg/errors"
@@ -20,7 +20,7 @@ import (
 
 
 func Init(lightningDir string) {
-	plugin := lightning.GetGlobalPlugin()
+	plugin := global.GetGlobalPlugin()
 	plugin = glightning.NewPlugin(InitFunc)
 	plugin.RegisterOption(glightning.NewOption("factory-port", "port api is available on. default: 9741", "9741"))
 	plugin.RegisterOption(glightning.NewOption("factory-page", "page api is available on. default: factory", "factory"))
@@ -30,7 +30,7 @@ func Init(lightningDir string) {
 	trustKeyMethod := glightning.NewRpcMethod(&trustKey{}, "allow a token with certian priviledges to be sent to owner of public key")
 	trustKeyMethod.LongDesc = "add a trusted pubkey"
 	plugin.RegisterMethod(trustKeyMethod)
-	lightning.SetGlobalPlugin(plugin)
+	global.SetGlobalPlugin(plugin)
 }
 
 func InitFunc(p *glightning.Plugin, o map[string]string, config *glightning.Config) {
@@ -38,7 +38,7 @@ func InitFunc(p *glightning.Plugin, o map[string]string, config *glightning.Conf
 	var port string = o["factory-port"]
 	var certfile string = o["certfile"]
 	var keyfile string = o["keyfile"]
-	l := lightning.GetGlobalLightning()
+	l := global.GetGlobalLightning()
 	l.StartUp(config.RpcFile, config.LightningDir)
 	var server *http.Server = &http.Server {
 		Addr: ":" + port,
@@ -53,8 +53,9 @@ func InitFunc(p *glightning.Plugin, o map[string]string, config *glightning.Conf
 
 type trustKey struct {
 	//defining the args of the trustKey method`
-	PubKey string
+	Service string
 	Privileges string
+	PubKey string
 }
 
 func (t *trustKey) New() interface{} {
@@ -66,7 +67,7 @@ func (t *trustKey) Name() string {
 }
 
 func (t *trustKey) Call() (jrpc2.Result, error) {
-	plugin := lightning.GetGlobalPlugin()
+	plugin := global.GetGlobalPlugin()
 	var ksToPsFile string = plugin.GetOptionValue("factory-trustedkeyfile")
 	f, err := os.Open(ksToPsFile)
 	if err != nil {
@@ -74,12 +75,13 @@ func (t *trustKey) Call() (jrpc2.Result, error) {
 	}
 	var decoder *json.Decoder = json.NewDecoder(f)
 	var encoder *json.Encoder
-	var ksToPs lightning.KeysToPrivileges
-	var pubkey string = t.PubKey
+	var ksToPs global.KeysToPrivileges
+	var serviceName string = t.Service
 	var privileges []string = strings.Split(t.Privileges, ",")
+	var pubkey string = t.PubKey
 	decoder.Decode(&ksToPs)
 	f.Close()
-	ksToPs.KsToPs = append(ksToPs.KsToPs, lightning.KeyToPrivileges{pubkey, privileges})
+	ksToPs.KsToPs = append(ksToPs.KsToPs, global.KeyToPrivileges{serviceName, privileges, pubkey})
 	f, err = os.Create(ksToPsFile)
 	if err != nil {
 		err = errors.Wrap(err, "failed to create new ksToPsFile file in trustKey.Call()")

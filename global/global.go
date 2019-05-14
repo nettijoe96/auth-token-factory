@@ -1,4 +1,4 @@
-package lightning
+package global
 
 import (
 	"github.com/niftynei/glightning/glightning"
@@ -10,8 +10,9 @@ type KeysToPrivileges struct {
 }
 
 type KeyToPrivileges struct {
-	PubKey string
+	Service string
 	Privileges []string
+	PubKey string
 }
 
 var lightning *glightning.Lightning = glightning.NewLightning()
